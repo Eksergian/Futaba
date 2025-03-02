@@ -270,17 +270,10 @@ end
 # prevents Pokémon from falling asleep. Affects non-airborne Pokémon only.
 # (Electric Terrain)
 #===============================================================================
-class Battle::Move::StartElectricTerrain < Battle::Move
-  def pbMoveFailed?(user, targets)
-    if @battle.field.terrain == :Electric
-      @battle.pbDisplay(_INTL("¡Pero ha fallado!"))
-      return true
-    end
-    return false
-  end
-
-  def pbEffectGeneral(user)
-    @battle.pbStartTerrain(user, :Electric)
+class Battle::Move::StartElectricTerrain < Battle::Move::TerrainMove
+  def initialize(battle, move)
+    super
+    @terrainType = :Electric
   end
 end
 
@@ -289,17 +282,10 @@ end
 # Pokémon at the end of each round. Affects non-airborne Pokémon only.
 # (Grassy Terrain)
 #===============================================================================
-class Battle::Move::StartGrassyTerrain < Battle::Move
-  def pbMoveFailed?(user, targets)
-    if @battle.field.terrain == :Grassy
-      @battle.pbDisplay(_INTL("¡Pero ha fallado!"))
-      return true
-    end
-    return false
-  end
-
-  def pbEffectGeneral(user)
-    @battle.pbStartTerrain(user, :Grassy)
+class Battle::Move::StartGrassyTerrain < Battle::Move::TerrainMove
+  def initialize(battle, move)
+    super
+    @terrainType = :Grassy
   end
 end
 
@@ -308,17 +294,10 @@ end
 # protects Pokémon from status problems. Affects non-airborne Pokémon only.
 # (Misty Terrain)
 #===============================================================================
-class Battle::Move::StartMistyTerrain < Battle::Move
-  def pbMoveFailed?(user, targets)
-    if @battle.field.terrain == :Misty
-      @battle.pbDisplay(_INTL("¡Pero ha fallado!"))
-      return true
-    end
-    return false
-  end
-
-  def pbEffectGeneral(user)
-    @battle.pbStartTerrain(user, :Misty)
+class Battle::Move::StartMistyTerrain < Battle::Move::TerrainMove
+  def initialize(battle, move)
+    super
+    @terrainType = :Misty
   end
 end
 
@@ -327,17 +306,10 @@ end
 # prevents Pokémon from being hit by >0 priority moves. Affects non-airborne
 # Pokémon only. (Psychic Terrain)
 #===============================================================================
-class Battle::Move::StartPsychicTerrain < Battle::Move
-  def pbMoveFailed?(user, targets)
-    if @battle.field.terrain == :Psychic
-      @battle.pbDisplay(_INTL("¡Pero ha fallado!"))
-      return true
-    end
-    return false
-  end
-
-  def pbEffectGeneral(user)
-    @battle.pbStartTerrain(user, :Psychic)
+class Battle::Move::StartPsychicTerrain < Battle::Move::TerrainMove
+  def initialize(battle, move)
+    super
+    @terrainType = :Psychic
   end
 end
 
@@ -880,7 +852,7 @@ class Battle::Move::DamageTargetAddSpikesToFoeSide < Battle::Move
     return if target.pbOwnSide.effects[PBEffects::Spikes] == 3
     target.pbOwnSide.effects[PBEffects::Spikes] += 1
     @battle.pbAnimation(:SPIKES, user, target)
-    @battle.pbDisplay(_INTL("Spikes were scattered all around {1}'s feet!", user.pbOpposingTeam(true)))
+    @battle.pbDisplay(_INTL("¡Hay púas esparcidas alrededor de los pies de {1}!", user.pbOpposingTeam(true)))
   end
 end
 
@@ -894,6 +866,6 @@ class Battle::Move::DamageTargetAddStealthRocksToFoeSide < Battle::Move
     return if target.pbOwnSide.effects[PBEffects::StealthRock]
     target.pbOwnSide.effects[PBEffects::StealthRock] = true
     @battle.pbAnimation(:STEALTHROCK, user, target)
-    @battle.pbDisplay(_INTL("Pointed stones float in the air around {1}!", user.pbOpposingTeam(true)))
+    @battle.pbDisplay(_INTL("¡Piedras puntiagudas flotan en el aire alrededor de {1}!", user.pbOpposingTeam(true)))
   end
 end

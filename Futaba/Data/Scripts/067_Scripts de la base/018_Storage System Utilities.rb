@@ -141,12 +141,12 @@ class StorageGrabber
   def pour(count)
     return if count == 0
     to_del = get_new_carried_mons(0)
-	to_del = to_del.sort{ |a, b| a[0] <=> b[0] }
-	ret = @carried_mons.clone
-	count.times do
-	  ret.pop
-	end
-	@carried_mons = ret
+	  to_del = to_del.sort{ |a, b| a[0] <=> b[0] }
+	  ret = @carried_mons.clone
+    count.times do
+      ret.pop
+    end
+  	@carried_mons = ret
   end
   
   #===============================================================================
@@ -173,7 +173,7 @@ class StorageGrabber
   
   def contains_an_egg?
     for i in @carried_mons
-      return true if i[0].egg?
+      return true if i[0]&.egg?
     end
     return false
   end
@@ -243,7 +243,6 @@ class PokemonBoxIcon < IconSprite
   def update_21
     do_colours
     if releasing?
-      time_now = System.uptime
       self.zoom_x = lerp(1.0, 0.0, 1.5, @release_timer_start, System.uptime)
       self.zoom_y = self.zoom_x
       self.opacity = lerp(255, 0, 1.5, @release_timer_start, System.uptime)
@@ -320,14 +319,14 @@ class PokemonBoxArrow < Sprite
       if @placingState <= 4 * Graphics.frame_rate / 20
         @handsprite.changeBitmap("fist" + b)
         self.y = @spriteY + (4.0 * @placingState * 20 / Graphics.frame_rate)
-		@placingState += 1
+		    @placingState += 1
       elsif @placingState <= 8 * Graphics.frame_rate / 20
         @holding = false
         @heldpkmn = nil
         @handsprite.changeBitmap("grab" + b)
         self.y = @spriteY + (4 * ((8 * Graphics.frame_rate / 20) - @placingState) * 20 / Graphics.frame_rate)
-		@placingState += 1
-	  else
+		    @placingState += 1
+      else
         @placingState = 0
       end
     elsif holding?
@@ -463,10 +462,10 @@ class PokemonStorageScene
         selection = PokemonBox::BOX_SIZE - (PokemonBox::BOX_WIDTH / 3)   # 28
       else
         selection -= PokemonBox::BOX_WIDTH
-		if skip && selection < 0
-          selection += PokemonBox::BOX_SIZE
-		elsif selection < 0
-          selection = -1
+        if skip && selection < 0
+              selection += PokemonBox::BOX_SIZE
+        elsif selection < 0
+              selection = -1
         end
       end
     when Input::DOWN
@@ -669,11 +668,11 @@ class PokemonStorageScene
     @storage.maxBoxes.times do |i|
       box = @storage[i]
       if box
-	    if swapping  && i == @storage.currentBox
+        if swapping  && i == @storage.currentBox
           commands.push("No intercambiar")
-		  next
-		end
-		commands.push(_INTL("{1} ({2}/{3})", box.name, box.nitems, box.length))
+          next
+        end
+		    commands.push(_INTL("{1} ({2}/{3})", box.name, box.nitems, box.length))
       end
     end
     return pbShowCommands(msg, commands, @storage.currentBox)
@@ -717,9 +716,9 @@ class PokemonStorageScene
     for i in 0...PokemonBox::BOX_SIZE
       boxpokesprite = @sprites["box"].getPokemon(i)
       if sels.include?(i)
-        boxpokesprite.make_green
+        boxpokesprite&.make_green
       else
-        boxpokesprite.make_clear
+        boxpokesprite&.make_clear
       end
     end
   end
@@ -783,7 +782,7 @@ class PokemonStorageScreen
   def pbBoxCommands
     c_consts = [:JUMP]
 	c_consts.push(:SWAP) if CAN_SWAP_BOXES
-	c_consts.push(:WALL, :NAME, :CANCEL)
+	c_consts.push(:WALL, :NAME, :RELEASE, :CANCEL)
     commands = [
       _INTL("Saltar")
 	]
@@ -791,6 +790,7 @@ class PokemonStorageScreen
     commands.push(
       _INTL("Fondo"),
       _INTL("Nombre"),
+      _INTL("Liberar Caja"),
       _INTL("Cancelar")
     )
     command = pbShowCommands(_INTL("¿Qué quieres hacer?"), commands)
@@ -814,9 +814,39 @@ class PokemonStorageScreen
       @scene.pbChangeBackground(papers[1][wpaper]) if wpaper >= 0
     when :NAME
       @scene.pbBoxName(_INTL("¿Nombre de la Caja?"), 0, 12)
+    when :RELEASE
+      pbReleaseBox(@storage.currentBox)
     end
   end
   
+  def pbReleaseBox(box)
+    released_count = 0
+    stored_items = 0
+    if pbConfirmMessageSerious(_INTL("¿Quieres liberar a todos los Pokémon de la Caja?"))
+      for i in 0...@storage.maxPokemon(box)
+        pokemon = @storage[box, i]
+        next if !pokemon || pokemon.egg? || pokemon.mail || pokemon.cannot_release
+        if pokemon.hasItem? # Recupera el objeto equipado si lleva alguno.
+          stored_items += 1
+          $bag.add(pokemon.item_id)
+        end
+        @storage.pbDelete(box, i)
+        @scene.pbHardRefresh
+        released_count += 1
+        pbWait(0.20)
+      end
+      if released_count > 0
+        pbDisplay(_INTL("¡Has liberado {1} Pokémon de esta caja!", released_count))
+      else
+        pbDisplay(_INTL("No hay Pokémon válidos para liberar en esta caja."))
+      end
+      if stored_items > 0
+        pbDisplay(_INTL("Se ha#{stored_items > 1 ? 'n' : ''} guardado #{stored_items} objeto#{ stored_items > 1 ? 's' : '' } en tu mochila"))
+      end
+    end
+    @scene.pbRefresh
+  end
+
   #===============================================================================
   # ***Additional methods***
   #===============================================================================
@@ -851,7 +881,7 @@ class PokemonStorageScreen
       if box >= 0 && this_pkmn
         this_pkmn.formTime = nil if this_pkmn.respond_to?("formTime")
         this_pkmn.form     = 0 if this_pkmn.isSpecies?(:SHAYMIN)
-        this_pkmn.heal
+        this_pkmn.heal if Settings::HEAL_STORED_POKEMON
       end
       @storage[box,this_index] = this_pkmn
       if box==-1
@@ -867,22 +897,42 @@ class PokemonStorageScreen
   # Puts all held Pokemon into available slots in a box
   #===============================================================================
   def pbPour(selected)
-    box = @storage.currentBox
-	mons_to_place = @scene.grabber.carried_mons.clone
-	count = 0
-	for i in 0...PokemonBox::BOX_SIZE
-	  next if @storage[box, i]
-	  m_t_p = mons_to_place.pop
-	  @storage[box, i] = m_t_p[0]
-	  count += 1
-	  break if mons_to_place.empty?
-	end
-	emptied = mons_to_place.empty?
-	@scene.grabber.pour(count)
+    # box = @storage.currentBox
+    mons_to_place = @scene.grabber.carried_mons.clone
+    needed_space = mons_to_place.size > 0 ?  mons_to_place.size : 1
+    box = @scene.pbChooseBoxWithSpace("¿Dejar en qué caja?", needed_space)
+    return false if box < 0
+    count = 0
+    placed = false
+    if !mons_to_place.empty?
+      for i in 0...PokemonBox::BOX_SIZE
+        next if @storage[box, i]
+        m_t_p = mons_to_place.pop
+        next unless m_t_p && !m_t_p.empty?
+        @storage[box, i] = m_t_p[0]
+        count += 1
+        break if mons_to_place.empty?
+      end
+    elsif @heldpkmn
+      for i in 0...PokemonBox::BOX_SIZE
+        next if @storage[box, i]
+        @storage[box, i] = @heldpkmn
+        count += 1
+        placed = true
+        break
+      end
+    end
+    emptied = mons_to_place.empty? || placed
     @scene.refresh_box_sprites
     @scene.pbRefresh
-	@heldpkmn = nil if emptied
-	return emptied
+    @heldpkmn = nil if emptied
+    if emptied && @scene.sprites["arrow"]&.holding?
+      @scene.sprites["arrow"]&.deleteSprite
+      @scene.sprites["arrow"]&.update 
+      @scene.grabber.carrying = false
+    end
+    @scene.grabber.pour(count)
+	  return emptied
   end
   
   #===============================================================================

@@ -1,4 +1,4 @@
-﻿# Consulta la documentación en la wiki para aprender cómo editar este archivo.
+﻿# See the documentation on the wiki to learn how to edit this file.
 #-------------------------------
 [CAMPER,Liam]
 LoseText = ¡Qué gran combate!
@@ -9,10 +9,10 @@ Pokemon = BONSLY,11
 Items = FULLRESTORE,FULLRESTORE
 LoseText = ¡Muy bien hecho!
 Pokemon = GEODUDE,12
-    Form = 1
     Moves = DEFENSECURL,HEADSMASH,ROCKPOLISH,ROCKTHROW
     AbilityIndex = 0
     Gender = male
+	Form = 1
     IV = 20,20,20,20,20,20
 Pokemon = ONIX,14
     Name = Rocky

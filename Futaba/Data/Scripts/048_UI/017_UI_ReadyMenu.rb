@@ -173,7 +173,7 @@ class PokemonReadyMenu_Scene
       elsif Input.trigger?(Input::RIGHT) && @index[2] == 0 && @itemcommands.length > 0
         @index[2] = 1
         pbChangeSide
-      elsif Input.trigger?(Input::BACK)
+      elsif Input.trigger?(Input::BACK) || Input.trigger?(Input::SPECIAL)
         pbPlayCloseMenuSE
         ret = -1
         break
@@ -261,7 +261,7 @@ class PokemonReadyMenu
         user = $player.party[commands[0][command[1]][3]]
         if move == :FLY
           ret = nil
-          pbFadeOutInWithUpdate(99999, @scene.sprites) do
+          pbFadeOutInWithUpdate(@scene.sprites) do
             pbHideMenu
             scene = PokemonRegionMap_Scene.new(-1, false)
             screen = PokemonRegionMapScreen.new(scene)
@@ -303,14 +303,16 @@ end
 # Using a registered item
 #===============================================================================
 def pbUseKeyItem
-  moves = [:CUT, :DEFOG, :DIG, :DIVE, :FLASH, :FLY, :HEADBUTT, :ROCKCLIMB,
-           :ROCKSMASH, :SECRETPOWER, :STRENGTH, :SURF, :SWEETSCENT, :TELEPORT,
-           :WATERFALL, :WHIRLPOOL]
   real_moves = []
-  moves.each do |move|
-    $player.party.each_with_index do |pkmn, i|
-      next if pkmn.egg? || !pkmn.hasMove?(move)
-      real_moves.push([move, i]) if pbCanUseHiddenMove?(pkmn, move, false)
+  if Settings::SHOW_HMS_IN_SPECIAL_MENU
+    moves = [:CUT, :DEFOG, :DIG, :DIVE, :FLASH, :FLY, :HEADBUTT, :ROCKCLIMB,
+            :ROCKSMASH, :SECRETPOWER, :STRENGTH, :SURF, :SWEETSCENT, :TELEPORT,
+            :WATERFALL, :WHIRLPOOL]  
+    moves.each do |move|
+      $player.party.each_with_index do |pkmn, i|
+        next if pkmn.egg? || !pkmn.hasMove?(move)
+        real_moves.push([move, i]) if pbCanUseHiddenMove?(pkmn, move, false)
+      end
     end
   end
   real_items = []

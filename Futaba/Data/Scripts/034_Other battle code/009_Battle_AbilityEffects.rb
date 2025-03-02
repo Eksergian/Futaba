@@ -516,7 +516,9 @@ Battle::AbilityEffects::StatusImmunity.add(:WATERVEIL,
   }
 )
 
-Battle::AbilityEffects::StatusCure.copy(:WATERVEIL, :WATERBUBBLE, :THERMALEXCHANGE)
+Battle::AbilityEffects::StatusImmunity.copy(:WATERVEIL, :WATERBUBBLE, :THERMALEXCHANGE)
+
+# Battle::AbilityEffects::StatusCure.copy(:WATERVEIL, :WATERBUBBLE, :THERMALEXCHANGE)
 
 #===============================================================================
 # StatusImmunityNonIgnorable handlers
@@ -731,7 +733,7 @@ Battle::AbilityEffects::StatLossImmunity.add(:BIGPECKS,
     if showMessages
       battle.pbShowAbilitySplash(battler)
       if Battle::Scene::USE_ABILITY_SPLASH
-        battle.pbDisplay(_INTL("¡{1} de {2} no puede ser bajado!", battler.pbThis, GameData::Stat.get(stat).name))
+        battle.pbDisplay(_INTL("¡{2} de {1} no puede ser bajado!", battler.pbThis(true), GameData::Stat.get(stat).name))
       else
         battle.pbDisplay(_INTL("¡La habilidad {2} de {1} evita la bajada de {3}!", battler.pbThis,
            battler.abilityName, GameData::Stat.get(stat).name))
@@ -781,7 +783,7 @@ Battle::AbilityEffects::StatLossImmunity.add(:HYPERCUTTER,
     if showMessages
       battle.pbShowAbilitySplash(battler)
       if Battle::Scene::USE_ABILITY_SPLASH
-        battle.pbDisplay(_INTL("¡{1} de {2} no puede ser bajado!", battler.pbThis, GameData::Stat.get(stat).name))
+        battle.pbDisplay(_INTL("¡{2} de {1} no puede ser bajado!", battler.pbThis(true), GameData::Stat.get(stat).name))
       else
         battle.pbDisplay(_INTL("¡La habilidad {2} de {1} evita la bajada de {3}!", battler.pbThis,
            battler.abilityName, GameData::Stat.get(stat).name))
@@ -798,7 +800,7 @@ Battle::AbilityEffects::StatLossImmunity.add(:KEENEYE,
     if showMessages
       battle.pbShowAbilitySplash(battler)
       if Battle::Scene::USE_ABILITY_SPLASH
-        battle.pbDisplay(_INTL("¡{1} de {2} no puede ser bajado!", battler.pbThis, GameData::Stat.get(stat).name))
+        battle.pbDisplay(_INTL("¡{2} de {1} no puede ser bajado!", battler.pbThis(true), GameData::Stat.get(stat).name))
       else
         battle.pbDisplay(_INTL("¡La habilidad {2} de {1} evita la bajada de {3}!", battler.pbThis,
            battler.abilityName, GameData::Stat.get(stat).name))
@@ -1139,9 +1141,9 @@ Battle::AbilityEffects::MoveImmunity.add(:WINDRIDER,
           target.pbRaiseStatStageByCause(:ATTACK, 1, user, target.abilityName)
         end
       elsif Battle::Scene::USE_ABILITY_SPLASH
-        battle.pbDisplay(_INTL("It doesn't affect {1}...", target.pbThis(true)))
+        battle.pbDisplay(_INTL("No afecta a {1}...", target.pbThis(true)))
       else
-        battle.pbDisplay(_INTL("{1}'s {2} made {3} ineffective!", target.pbThis, target.abilityName, move.name))
+        battle.pbDisplay(_INTL("¡{1} de {2} hizo inefectivo el {3}!", target.abilityName, target.pbThis, move.name))
       end
       battle.pbHideAbilitySplash(target)
     end
@@ -2057,9 +2059,11 @@ Battle::AbilityEffects::OnBeingHit.add(:ILLUSION,
   proc { |ability, user, target, move, battle|
     # NOTE: This intentionally doesn't show the ability splash.
     next if !target.effects[PBEffects::Illusion]
+    battle.pbCommonAnimation("Illusion", target)
     target.effects[PBEffects::Illusion] = nil
     battle.scene.pbChangePokemon(target, target.pokemon)
-    battle.pbDisplay(_INTL("{1}'s illusion wore off!", target.pbThis))
+    battle.pbCommonAnimation("Fade in", target)
+    battle.pbDisplay(_INTL("¡La ilusión de {1} se ha desvanecido!", target.pbThis))
     battle.pbSetSeen(target)
   }
 )
@@ -3545,27 +3549,27 @@ Battle::AbilityEffects::OnSwitchIn.add(:SCREENCLEANER,
     battle.pbShowAbilitySplash(battler)
     if battler.pbOpposingSide.effects[PBEffects::AuroraVeil] > 0
       battler.pbOpposingSide.effects[PBEffects::AuroraVeil] = 0
-      battle.pbDisplay(_INTL("¡El efecto de Velo Aurora en el {1} se ha disipado!", battler.pbOpposingTeam))
+      battle.pbDisplay(_INTL("¡El efecto de Velo Aurora en el {1} se ha disipado!", battler.pbOpposingTeam(true)))
     end
     if battler.pbOpposingSide.effects[PBEffects::LightScreen] > 0
       battler.pbOpposingSide.effects[PBEffects::LightScreen] = 0
-      battle.pbDisplay(_INTL("¡El efecto de Pantalla de Luz en el {1} se ha disipado!", battler.pbOpposingTeam))
+      battle.pbDisplay(_INTL("¡El efecto de Pantalla de Luz en el {1} se ha disipado!", battler.pbOpposingTeam(true)))
     end
     if battler.pbOpposingSide.effects[PBEffects::Reflect] > 0
       battler.pbOpposingSide.effects[PBEffects::Reflect] = 0
-      battle.pbDisplay(_INTL("¡El efecto de Reflejo en el {1} se ha disipado!", battler.pbOpposingTeam))
+      battle.pbDisplay(_INTL("¡El efecto de Reflejo en el {1} se ha disipado!", battler.pbOpposingTeam(true)))
     end
     if battler.pbOwnSide.effects[PBEffects::AuroraVeil] > 0
       battler.pbOwnSide.effects[PBEffects::AuroraVeil] = 0
-      battle.pbDisplay(_INTL("¡El efecto de Velo Aurora en el {1} se ha disipado!", battler.pbTeam))
+      battle.pbDisplay(_INTL("¡El efecto de Velo Aurora en el {1} se ha disipado!", battler.pbTeam(true)))
     end
     if battler.pbOwnSide.effects[PBEffects::LightScreen] > 0
       battler.pbOwnSide.effects[PBEffects::LightScreen] = 0
-      battle.pbDisplay(_INTL("¡El efecto de Pantalla de Luz en el {1} se ha disipado!", battler.pbTeam))
+      battle.pbDisplay(_INTL("¡El efecto de Pantalla de Luz en el {1} se ha disipado!", battler.pbTeam(true)))
     end
     if battler.pbOwnSide.effects[PBEffects::Reflect] > 0
       battler.pbOwnSide.effects[PBEffects::Reflect] = 0
-      battle.pbDisplay(_INTL("¡El efecto de Reflejo en el {1} se ha disipado!", battler.pbTeam))
+      battle.pbDisplay(_INTL("¡El efecto de Reflejo en el {1} se ha disipado!", battler.pbTeam(true)))
     end
     battle.pbHideAbilitySplash(battler)
   }

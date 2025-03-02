@@ -33,7 +33,20 @@ module Settings
   # Muestra unas barras negras en los marcos superirores e inferiores 
   # A medida que se acercan a un entrenador se vuelven mas oscuras.
   MOSTRAR_BARRAS_ENTRENADORES = true
-  
+
+
+  # Elige si cuando crees regalos misteriosos en el archivo MysteryGiftMaster.txt,
+  # estos datos estarán o no encriptados. No encriptarlos ayuda a poder abrir el
+  # archivo y ver el contenido desde cualquier editor de texto, pero en caso de que
+  # hayas creado alguno con contraseña, tus jugadores podrán ver el contenido.
+  # Lo recomendable es que cuando compartas tu juego borres los dos archivos txt
+  # de MysteryGiftMaster.txt y MysteryGiftMaster.txt que se generan en la carpeta
+  # principal del juego, pero si no te quieres preocupar por si se te olvida, deja
+  # esta opción en true.
+  # Ten en cuenta que si cambias esta opción deberás eliminar los dos archivos de
+  # la carpeta para no tener errores.
+  ENCRIPTAR_REGALOS_MISTERIOSOS_EN_MASTER = true
+
   #=============================================================================
 
   # La cantidad máxima de dinero que el jugador puede llegar a tener.
@@ -112,6 +125,10 @@ module Settings
   # compres de una sola vez (true) o que te den 1 sola Honor Ball cuando compras
   # 10 o más Poké Balls (false). 
   MORE_BONUS_PREMIER_BALLS                   = (MECHANICS_GENERATION >= 8)
+
+  # El valor por defecto de venta de un objeto en las tiendas, es el precio de compra dividido por este número
+  ITEM_SELL_PRICE_DIVISOR                    = MECHANICS_GENERATION >= 9 ? 4 : 2
+
   # El número de pasos permitodos en la Zona Safari antes de que te echen
   # (0 = infinito).
   SAFARI_STEPS                               = 600
@@ -221,6 +238,15 @@ module Settings
   BADGE_FOR_DIVE      = 7
   BADGE_FOR_WATERFALL = 8
 
+  # Si deseas usar la MO en el OW, sin la necesidad de aprenderlas, cambia la siguiente constante a true
+  # IMPORTANTE: tienes que tener un Pokémon en el equipo que pueda aprender el movimiento, pero no es necesario enseñarselo.
+  USE_HM_WITHOUT_LEARNING_THEM = false
+
+  # Las MOs se pueden olvidar
+  CAN_FORGET_HMS = true 
+
+  INCUBATOR_CHOOSE_EGG_FROM_PC = true
+
   #=============================================================================
 
   # Los nombres de cada bolsillo de la Mochila.
@@ -298,7 +324,7 @@ module Settings
   # Si todas las formas de una especie de Pokémon concreto se pueden ver en la
   # Pokédex con solo haber visto una de ellas (true) o necesitas ver cada forma
   # por separado para que esa forma en concreto se vea en la Pokédex (falso).
-  DEX_SHOWS_ALL_FORMS = false
+  DEX_SHOWS_ALL_FORMS = true
   # Una lista de números, donde cada número es el de una de las Pokédex (en el 
   # mismo orden que las que hay arriba, salvo la Nacional, que es -1). Todas las
   # diferentes Pokédex que pongas aquí empezarán su número en 0 en lugar de en
@@ -324,6 +350,13 @@ module Settings
   # Si el jugador puede hacer Vuelo mientras mira el mapa. Esto solo se permite
   # si el jugador puede usar Vuelo de forma normal.
   CAN_FLY_FROM_TOWN_MAP = true
+
+  # Desactivar si no quieres mostrar las MOs en el menú del equipo.
+  SHOW_HMS_IN_PARTY_MENU = true
+
+
+  # Desactivar si no quieres mostrar las MOs en el menú de la D (Objetos registrados).
+  SHOW_HMS_IN_SPECIAL_MENU = true
 
   #=============================================================================
   
@@ -441,7 +474,7 @@ module Settings
   # Lista de los posibles idiomas del juego. Cada uno es una lista que contiene
   # el nombre del idioma que se muestra en el juego y el fragmento del archivo
   # de ese lenguaje. Un lenguaje usa los archivos de datos que están en la 
-  # carpeta Data llamados essages_FRAGMENT_core.dat y messages_FRAGMENT_game.dat 
+  # carpeta Data llamados messages_FRAGMENT_core.dat y messages_FRAGMENT_game.dat 
   # (en caso de que existan).
   LANGUAGES = [
 #    ["Español", "español"],
@@ -528,6 +561,8 @@ module Settings
   
   ENABLE_SKIP_TEXT = false
 
+  # Desactiva el sonido de "bump" al chocarte con cosas.
+  DISABLE_BUMP_SOUND = true
   #=============================================================================
 
   # Aquí van los créditos de tu juego, en un array. Puedes poner las líneas 
@@ -623,7 +658,7 @@ end
 module Essentials
   VERSION = "21.1"
   ERROR_TEXT = ""
-  MKXPZ_VERSION = "2.4.2/c9378cf"
+  MKXPZ_VERSION = "2.4.2/e19a1bc"
 end
 
 

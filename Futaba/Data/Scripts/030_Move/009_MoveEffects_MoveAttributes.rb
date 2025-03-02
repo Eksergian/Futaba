@@ -828,15 +828,15 @@ class Battle::Move::RemoveScreens < Battle::Move
   def pbEffectGeneral(user)
     if user.pbOpposingSide.effects[PBEffects::LightScreen] > 0
       user.pbOpposingSide.effects[PBEffects::LightScreen] = 0
-      @battle.pbDisplay(_INTL("¡El efecto de Pantalla de Luz en el {1} se ha disipado!", user.pbOpposingTeam))
+      @battle.pbDisplay(_INTL("¡El efecto de Pantalla de Luz en el {1} se ha disipado!", user.pbOpposingTeam(true)))
     end
     if user.pbOpposingSide.effects[PBEffects::Reflect] > 0
       user.pbOpposingSide.effects[PBEffects::Reflect] = 0
-      @battle.pbDisplay(_INTL("¡El efecto de Reflejo en el {1} se ha disipado!", user.pbOpposingTeam))
+      @battle.pbDisplay(_INTL("¡El efecto de Reflejo en el {1} se ha disipado!", user.pbOpposingTeam(true)))
     end
     if user.pbOpposingSide.effects[PBEffects::AuroraVeil] > 0
       user.pbOpposingSide.effects[PBEffects::AuroraVeil] = 0
-      @battle.pbDisplay(_INTL("¡El efecto de Velo Aurora en el {1} se ha disipado!", user.pbOpposingTeam))
+      @battle.pbDisplay(_INTL("¡El efecto de Velo Aurora en el {1} se ha disipado!", user.pbOpposingTeam(true)))
     end
   end
 
@@ -1025,7 +1025,7 @@ class Battle::Move::HoopaRemoveProtectionsBypassSubstituteLowerUserDef1 < Battle
   end
 
   def pbEffectAgainstTarget(user, target)
-  target.effects[PBEffects::BurningBulwark]           = false
+    target.effects[PBEffects::BurningBulwark]         = false
     target.effects[PBEffects::SilkTrap]         	    = false
     target.effects[PBEffects::BanefulBunker]          = false
     target.effects[PBEffects::KingsShield]            = false

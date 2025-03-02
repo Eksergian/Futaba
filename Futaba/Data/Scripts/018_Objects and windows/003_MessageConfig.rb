@@ -16,6 +16,8 @@ module MessageConfig
   SMALL_FONT_NAME          = "Power Green Small"
   SMALL_FONT_SIZE          = 21
   SMALL_FONT_Y_OFFSET      = 8
+  TINY_FONT_SIZE           = 15
+  TINY_FONT_Y_OFFSET       = 7
   NARROW_FONT_NAME         = "Power Green Narrow"
   NARROW_FONT_SIZE         = 27
   NARROW_FONT_Y_OFFSET     = 8
@@ -34,27 +36,34 @@ module MessageConfig
 
   def self.pbDefaultSystemFrame
     if $PokemonSystem
-      return pbResolveBitmap("Graphics/Windowskins/" + Settings::MENU_WINDOWSKINS[$PokemonSystem.frame]) || ""
+      path = File.join("Graphics", "Windowskins", Settings::MENU_WINDOWSKINS[$PokemonSystem.frame])
+      return pbResolveBitmap(path) || ""
     else
-      return pbResolveBitmap("Graphics/Windowskins/" + Settings::MENU_WINDOWSKINS[0]) || ""
+      path = File.join("Graphics", "Windowskins", Settings::MENU_WINDOWSKINS[0])
+      return pbResolveBitmap(path) || ""
     end
   end
 
   def self.pbDefaultSpeechFrame
     if $PokemonSystem
-      return pbResolveBitmap("Graphics/Windowskins/" + Settings::SPEECH_WINDOWSKINS[$PokemonSystem.textskin]) || ""
+      path = File.join("Graphics", "Windowskins", Settings::SPEECH_WINDOWSKINS[$PokemonSystem.textskin])
+      return pbResolveBitmap(path) || ""
     else
-      return pbResolveBitmap("Graphics/Windowskins/" + Settings::SPEECH_WINDOWSKINS[0]) || ""
+      path = File.join("Graphics", "Windowskins", Settings::SPEECH_WINDOWSKINS[0])
+      return pbResolveBitmap(path) || ""
     end
   end
 
   def self.pbDefaultWindowskin
     skin = ($data_system) ? $data_system.windowskin_name : nil
     if skin && skin != ""
-      skin = pbResolveBitmap("Graphics/Windowskins/" + skin) || ""
+      path = File.join("Graphics", "Windowskins", skin)
+      skin = pbResolveBitmap(path) || ""
     end
-    skin = pbResolveBitmap("Graphics/System/Window") if nil_or_empty?(skin)
-    skin = pbResolveBitmap("Graphics/Windowskins/001-Blue01") if nil_or_empty?(skin)
+    path = File.join("Graphics", "System", "Window")
+    skin = pbResolveBitmap(path) if nil_or_empty?(skin)
+    path = File.join("Graphics", "Windowskins", "001-Blue01")
+    skin = pbResolveBitmap(path) if nil_or_empty?(skin)
     return skin || ""
   end
 
@@ -241,17 +250,15 @@ end
 def pbRepositionMessageWindow(msgwindow, linecount = 2)
   msgwindow.height = (32 * linecount) + msgwindow.borderY
   msgwindow.y = (Graphics.height) - (msgwindow.height)
-  if $game_system
-    case $game_system.message_position
-    when 0  # up
-      msgwindow.y = 0
-    when 1  # middle
-      msgwindow.y = (Graphics.height / 2) - (msgwindow.height / 2)
-    when 2
-      msgwindow.y = (Graphics.height) - (msgwindow.height)
-    end
-    msgwindow.opacity = 0 if $game_system.message_frame != 0
+  case $game_system&.message_position || 2
+  when 0   # top
+    msgwindow.y = 0
+  when 1   # middle
+    msgwindow.y = (Graphics.height - msgwindow.height) / 2
+  when 2   # bottom
+    msgwindow.y = Graphics.height - msgwindow.height
   end
+  msgwindow.opacity = 0 if ($game_system&.message_frame || 0) != 0
 end
 
 # internal function
@@ -330,7 +337,7 @@ end
 #===============================================================================
 # Determine which text colours to use based on the darkness of the background
 #===============================================================================
-def getSkinColor(windowskin, color, isDarkSkin)
+def getSkinColor(windowskin, color, isDarkSkin, no_ctag = false)
   if !windowskin || windowskin.disposed? ||
      windowskin.width != 128 || windowskin.height != 128
     # Base color, shadow color (these are reversed on dark windowskins)
@@ -354,23 +361,28 @@ def getSkinColor(windowskin, color, isDarkSkin)
     ]
     if color == 0 || color > textcolors.length / 2   # No special colour, use default
       if isDarkSkin   # Dark background, light text
-        return shadowc3tag(MessageConfig::LIGHT_TEXT_MAIN_COLOR, MessageConfig::LIGHT_TEXT_SHADOW_COLOR)
+        return no_ctag ? [MessageConfig::LIGHT_TEXT_MAIN_COLOR, MessageConfig::LIGHT_TEXT_SHADOW_COLOR] : shadowc3tag(MessageConfig::LIGHT_TEXT_MAIN_COLOR, MessageConfig::LIGHT_TEXT_SHADOW_COLOR)
+        # return shadowc3tag(MessageConfig::LIGHT_TEXT_MAIN_COLOR, MessageConfig::LIGHT_TEXT_SHADOW_COLOR) 
       end
       # Light background, dark text
-      return shadowc3tag(MessageConfig::DARK_TEXT_MAIN_COLOR, MessageConfig::DARK_TEXT_SHADOW_COLOR)
+      return no_ctag ? [MessageConfig::DARK_TEXT_MAIN_COLOR, MessageConfig::DARK_TEXT_SHADOW_COLOR] : shadowc3tag(MessageConfig::DARK_TEXT_MAIN_COLOR, MessageConfig::DARK_TEXT_SHADOW_COLOR)
+      # return shadowc3tag(MessageConfig::DARK_TEXT_MAIN_COLOR, MessageConfig::DARK_TEXT_SHADOW_COLOR)
     end
     # Special colour as listed above
     if isDarkSkin && color != 12   # Dark background, light text
-      return shadowc3tag(textcolors[(2 * (color - 1)) + 1], textcolors[2 * (color - 1)])
+      return no_ctag ? [textcolors[(2 * (color - 1)) + 1], textcolors[2 * (color - 1)]] : shadowc3tag(textcolors[(2 * (color - 1)) + 1], textcolors[2 * (color - 1)])
+      # return shadowc3tag(textcolors[(2 * (color - 1)) + 1], textcolors[2 * (color - 1)])
     end
     # Light background, dark text
-    return shadowc3tag(textcolors[2 * (color - 1)], textcolors[(2 * (color - 1)) + 1])
+    return no_ctag ? [textcolors[2 * (color - 1)], textcolors[(2 * (color - 1)) + 1]] : shadowc3tag(textcolors[2 * (color - 1)], textcolors[(2 * (color - 1)) + 1])
+    # return shadowc3tag(textcolors[2 * (color - 1)], textcolors[(2 * (color - 1)) + 1])
   else   # VX windowskin
     color = 0 if color >= 32
     x = 64 + ((color % 8) * 8)
     y = 96 + ((color / 8) * 8)
     pixel = windowskin.get_pixel(x, y)
-    return shadowc3tag(pixel, pixel.get_contrast_color)
+    return no_ctag ? [pixel, pixel.get_contrast_color] : shadowc3tag(pixel, pixel.get_contrast_color)
+    # return shadowc3tag(pixel, pixel.get_contrast_color)
   end
 end
 
@@ -424,6 +436,12 @@ def pbSetSmallFont(bitmap)
   bitmap.font.name = MessageConfig.pbGetSmallFontName
   bitmap.font.size = MessageConfig::SMALL_FONT_SIZE
   bitmap.text_offset_y = MessageConfig::SMALL_FONT_Y_OFFSET
+end
+
+def pbSetTinyFont(bitmap)
+  bitmap.font.name = MessageConfig.pbGetSmallFontName
+  bitmap.font.size = MessageConfig::TINY_FONT_SIZE
+  bitmap.text_offset_y = MessageConfig::TINY_FONT_Y_OFFSET
 end
 
 # Sets a bitmap's font to the system narrow font.
@@ -491,7 +509,7 @@ def using(window)
 end
 
 def pbUpdateSpriteHash(windows)
-  windows.each do |i|
+  windows&.each do |i|
     window = i[1]
     if window
       if window.is_a?(Sprite) || window.is_a?(Window)
@@ -591,7 +609,7 @@ def pbFadeOutIn(z = 99999, nofadeout = false)
   end
 end
 
-def pbFadeOutInWithUpdate(z, sprites, nofadeout = false)
+def pbFadeOutInWithUpdate(sprites, z = 99999, nofadeout = false)
   duration = 0.4   # In seconds
   col = Color.new(0, 0, 0, 0)
   viewport = Viewport.new(0, 0, Graphics.width, Graphics.height)

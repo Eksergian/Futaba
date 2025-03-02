@@ -260,6 +260,40 @@ class Pokemon
     @status = new_status.id
   end
 
+  def can_get_status?(status)
+    # Type immunities
+    hasImmuneType = false
+    case status
+    when :SLEEP
+      # No type is immune to sleep
+    when :POISON
+      hasImmuneType |= hasType?(:POISON)
+      hasImmuneType |= hasType?(:STEEL)
+    when :BURN
+      hasImmuneType |= hasType?(:FIRE)
+    when :PARALYSIS
+      hasImmuneType |= hasType?(:ELECTRIC) && Settings::MORE_TYPE_EFFECTS
+    when :FROZEN 
+      hasImmuneType |= hasType?(:ICE)
+    when :FROSTBITE
+      hasImmuneType |= hasType?(:ICE)
+    end
+    return false if hasImmuneType
+
+    # Ability immunity
+    immuneByAbility = false
+    if Battle::AbilityEffects.triggerStatusImmunityNonIgnorable(self.ability, self, status)
+      immuneByAbility = true
+    else
+      if Battle::AbilityEffects.triggerStatusImmunity(self.ability, self, status)
+        immuneByAbility = true
+      end
+    end
+      
+    return !immuneByAbility
+      
+  end
+
   # @return [Boolean] whether the Pokémon is not fainted and not an egg
   def able?
     return !egg? && @hp > 0
@@ -380,6 +414,11 @@ class Pokemon
   #   gender (or genderless)
   def singleGendered?
     return species_data.single_gendered?
+  end
+
+  def changeGender
+    return if singleGendered?
+    self.male? ? self.makeFemale : self.makeMale
   end
 
   #=============================================================================
@@ -1211,7 +1250,7 @@ class Pokemon
   #-----------------------------------------------------------------------------
   def recoil_evolution(qty = 1)
     species_data.get_evolutions.each do |evo|
-      if evo[1] == :LevelRecoilDamage
+      if evo[1] == :LevelRecoilDamage || evo[1] == :LevelRecoilDamageForm0
         @evo_recoil_count = 0 if !@evo_recoil_count
         @evo_recoil_count += qty
         break
@@ -1329,6 +1368,17 @@ class Pokemon
   end
 end
 
+def change_pokemon_gender
+  pbChoosePokemon(1, 2, proc { |pkmn|
+    !pkmn.egg? && !pkmn.shadowPokemon? && !pkmn.singleGendered?
+  })
+  return false if $game_variables[1] == -1
+  pokemon = pbGetPokemon(1)
+  pokemon.changeGender
+  return true
+end
+
+
 ################################################################################
 # 
 # New evolution methods.
@@ -1401,6 +1451,23 @@ GameData::Evolution.register({
 })
 
 GameData::Evolution.register({
+  :id            => :LevelRecoilDamageForm0,
+  :parameter     => Integer,
+  :any_level_up  => true,   # Needs any level up
+  :level_up_proc => proc { |pkmn, parameter|
+  if pkmn.evo_recoil_count >= parameter
+    pkmn.form = pkmn.gender if pkmn.form == 0
+    next true
+  end
+  },
+  :after_evolution_proc => proc { |pkmn, new_species, parameter, evo_species|
+    next false if evo_species != new_species || pkmn.evo_recoil_count < parameter
+    pkmn.evo_recoil_count = 0
+    next true
+  }
+})
+
+GameData::Evolution.register({
   :id            => :LevelWalk,
   :parameter     => Integer,
   :any_level_up  => true,   # Needs any level up
@@ -1426,7 +1493,7 @@ GameData::Evolution.register({
 # Tracks steps taken to trigger walking evolutions for the lead Pokemon.
 #-------------------------------------------------------------------------------
 EventHandlers.add(:on_player_step_taken, :evolution_steps, proc {
-  $player.first_able_pokemon.walking_evolution if $player.party_count > 0
+  $player.first_able_pokemon.walking_evolution if $player.party_count > 0 && $player.first_able_pokemon
 })
 
 #-------------------------------------------------------------------------------

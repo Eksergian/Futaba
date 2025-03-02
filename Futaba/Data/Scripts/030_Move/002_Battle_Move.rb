@@ -134,6 +134,7 @@ class Battle::Move
   def highCriticalRate?;  return @flags.any? { |f| f[/^HighCriticalHitRate$/i] }; end
   def bitingMove?;        return @flags.any? { |f| f[/^Biting$/i] };              end
   def punchingMove?;      return @flags.any? { |f| f[/^Punching$/i] };            end
+  def kickingMove?;       return @flags.any? { |f| f[/^Kicking$/i] };             end
   def soundMove?;         return @flags.any? { |f| f[/^Sound$/i] };               end
   def powderMove?;        return @flags.any? { |f| f[/^Powder$/i] };              end
   def pulseMove?;         return @flags.any? { |f| f[/^Pulse$/i] };               end
@@ -167,48 +168,59 @@ class Battle::Move
 
   def display_type(battler)
     case @function_code
-    when "TypeDependsOnUserPlate",            # Judgement
-         "TypeIsUserSecondType",              # Ivy Cudgel
-         "TypeIsUserSecondTypeRemoveScreens"  # Raging Bull
-      return pbBaseType(battler)
     when "TypeDependsOnUserMorpekoFormRaiseUserSpeed1"
       if battler.isSpecies?(:MORPEKO) || battler.effects[PBEffects::TransformSpecies] == :MORPEKO
         return pbBaseType(battler)
       end
-=begin
     when "TypeDependsOnUserPlate", "TypeDependsOnUserMemory",
          "TypeDependsOnUserDrive", "TypeAndPowerDependOnUserBerry",
          "TypeIsUserFirstType", "TypeAndPowerDependOnWeather",
-         "TypeAndPowerDependOnTerrain"
-      return pbBaseType(battler)
-=end
+         "TypeAndPowerDependOnTerrain",
+         "TypeIsUserSecondType",              # Ivy Cudgel
+         "TypeIsUserSecondTypeRemoveScreens"  # Raging Bull
+      return pbBaseType(battler) if Settings::SHOW_MODIFIED_MOVE_PROPERTIES
     end
     return @realMove.display_type(battler.pokemon)
   end
 
   def display_damage(battler)
-=begin
-    case @function_code
-    when "TypeAndPowerDependOnUserBerry"
-      return pbNaturalGiftBaseDamage(battler.item_id)
-    when "TypeAndPowerDependOnWeather", "TypeAndPowerDependOnTerrain",
-         "PowerHigherWithUserHP", "PowerLowerWithUserHP",
-         "PowerHigherWithUserHappiness", "PowerLowerWithUserHappiness",
-         "PowerHigherWithUserPositiveStatStages", "PowerDependsOnUserStockpile"
-      return pbBaseType(@power, battler, nil)
+    if Settings::SHOW_MODIFIED_MOVE_PROPERTIES
+      case @function_code
+      when "TypeAndPowerDependOnUserBerry"
+        return pbNaturalGiftBaseDamage(battler.item_id)
+      when "TypeAndPowerDependOnWeather", "TypeAndPowerDependOnTerrain",
+          "PowerHigherWithUserHP", "PowerLowerWithUserHP",
+          "PowerHigherWithUserHappiness", "PowerLowerWithUserHappiness",
+          "PowerHigherWithUserPositiveStatStages", "PowerDependsOnUserStockpile"
+        return pbBaseType(@power, battler, nil)
+      end
     end
-=end
     return @realMove.display_damage(battler.pokemon)
   end
 
-  def display_category(battler)
-=begin
-    case @function_code
-    when "CategoryDependsOnHigherDamageIgnoreTargetAbility"
-      pbOnStartUse(user, nil)
-      return @calcCategory
+  def display_power(battler)
+    if Settings::SHOW_MODIFIED_MOVE_PROPERTIES
+      case @function_code
+      when "TypeAndPowerDependOnUserBerry"
+        return pbNaturalGiftBaseDamage(battler.item_id)
+      when "TypeAndPowerDependOnWeather", "TypeAndPowerDependOnTerrain",
+           "PowerHigherWithUserHP", "PowerLowerWithUserHP",
+           "PowerHigherWithUserHappiness", "PowerLowerWithUserHappiness",
+           "PowerHigherWithUserPositiveStatStages", "PowerDependsOnUserStockpile"
+        return pbBaseType(@power, battler, nil)
+      end
     end
-=end
+    return @realMove.display_power(battler.pokemon)
+  end
+
+  def display_category(battler)
+    if Settings::SHOW_MODIFIED_MOVE_PROPERTIES
+      case @function_code
+      when "CategoryDependsOnHigherDamageIgnoreTargetAbility"
+        pbOnStartUse(user, nil)
+        return @calcCategory
+      end
+    end
     return @realMove.display_category(battler.pokemon)
   end
 

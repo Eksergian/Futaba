@@ -36,10 +36,10 @@ module Input
   def self.update
     update_KGC_ScreenCapture
     pbScreenCapture if trigger?(Input::F8)
-    if $CanToggle && trigger?(Input::ALT)
+    if $CanToggle && (trigger?(Input::ALT) || trigger?(Input::AUX1))
       $GameSpeed += 1
       if $GameSpeed >= SPEEDUP_STAGES.size
-        $GameSpeed = 0
+        $GameSpeed = 0 
         $SpeedDiference += (System.real_uptime * SPEEDUP_STAGES[-1])
       end
       # $PokemonSystem.battle_speed = $GameSpeed if $PokemonSystem && $PokemonSystem.only_speedup_battles == 1
@@ -71,14 +71,15 @@ end
 #===============================================================================#
 # Event handlers for in-battle speed-up restrictions
 #===============================================================================#
-# EventHandlers.add(:on_start_battle, :start_speedup, proc {
-#   $CanToggle = false
-#   $GameSpeed = $PokemonSystem.battle_speed if $PokemonSystem.only_speedup_battles == 1
-# })
-# EventHandlers.add(:on_end_battle, :stop_speedup, proc {
-#   $GameSpeed = 0 if $PokemonSystem.only_speedup_battles == 1
-#   $CanToggle = true if $PokemonSystem.only_speedup_battles == 0
-# })
+EventHandlers.add(:on_start_battle, :start_speedup, proc {
+  $CanToggle = true if $PokemonSystem.only_speedup_battles == 1
+  $GameSpeed = $PokemonSystem.battle_speed if $PokemonSystem.only_speedup_battles == 1
+})
+EventHandlers.add(:on_end_battle, :stop_speedup, proc {
+  $GameSpeed = 0 if $PokemonSystem.only_speedup_battles == 1
+  $CanToggle = false if $PokemonSystem.only_speedup_battles == 1
+})
+
 
 #===============================================================================#
 # Can only change speed in battle during command phase (prevents weird animation glitches)
@@ -227,6 +228,22 @@ class PokemonSystem
     @battle_speed = 0 # Depends on the SPEEDUP_STAGES array size
   end
 end
+
+MenuHandlers.add(:options_menu, :turbo, {
+  "name"        => _INTL("Modo turbo"),
+  "order"       => 45,
+  "type"        => EnumOption,
+  "condition"   => proc { next expshare_enabled? },
+  "parameters"  => [_INTL("Siempre"), _INTL("Combates")],
+  "description" => _INTL("Define el modo del turbo, si se puede activar siempre o solo en combates."),
+  "get_proc"    => proc { next $PokemonSystem.only_speedup_battles },
+  "set_proc"    => proc { |value, _scene| 
+    $PokemonSystem.only_speedup_battles = value 
+    $CanToggle = $PokemonSystem.only_speedup_battles == 0
+    $GameSpeed = 0 if $PokemonSystem.only_speedup_battles == 1
+  }
+})
+
 
 
 module Graphics
